@@ -114,3 +114,11 @@ class GoogleLanguageModel(object):
         natural_log = logprobs[id]
         return natural_log/2.303
 
+    # get entire vector from context
+    def get_logprob_vector(self, lstm_state):
+        w = self.w
+        bias = self.bias
+        unnorm_logprobs = np.squeeze(np.dot(self.w, lstm_state.T)) + bias
+        logsumexp_logprobs = logsumexp(unnorm_logprobs)
+        logprobs = unnorm_logprobs - logsumexp_logprobs
+        return logprobs

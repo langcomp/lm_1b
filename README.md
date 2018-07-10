@@ -9,6 +9,8 @@
 
 0) You should create a `/raw_data` directory to store the raw Dundee files (these must be acquired independently, as they are proprietary)
 
+0) You should also create a directory that will be pointed to in `filenames.py` as the `google_lm_dir`. The `.pbtxt` and `ckpt` files from [tensorflow/models](https://github.com/tensorflow/models/tree/master/research/lm_1b).
+
 1) `process_experiment.py` is the central file for processing. The file requires a (directory of) file(s) with raw corpus data. In the case of the Dundee corpus, these files are formatted as:
 ```
 Are                                 1  1 1   1   1   ...  
@@ -27,7 +29,7 @@ The important element is that each line contains one token per line. Tokens shou
 
 1) The corpus file returned above is fed into `rnn_corpus.create()`. 
 
-2) A `GoogleLanguageModel` is created. This relies on code and files from Tal Linzen's [rnn_agreement](https://github.com/TalLinzen/rnn_agreement/tree/master/rnnagr) codebase. The directory where these files are stored should be hardcoded into `filenames.py`.
+2) A `GoogleLanguageModel` is created. This relies on code and files from Tal Linzen's [rnn_agreement](https://github.com/TalLinzen/rnn_agreement/tree/master/rnnagr) codebase. The directory where these files are stored should be hardcoded into `filenames.py`. Also make sure that all dependencies listed in this repo are added to your current environment.
 
 3) The RNN-LSTM is processed as follows:
 
