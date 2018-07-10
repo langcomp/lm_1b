@@ -2,3 +2,8 @@
 raw_data/
 # Proprietery files 
 proprietary_processed_files/
+# project files
+.idea/
+create_probabilities_from_raw_data/__pycache__/
+# prprocessed data
+preprocessed_data/
