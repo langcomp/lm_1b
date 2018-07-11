@@ -6,11 +6,13 @@ import tensorflow as tf
 from google.protobuf import text_format
 
 import data_utils as data_utils
-import filenames as filenames
+import filenames
 
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 import math
+
+import kenlm
 
 # For saving demo resources, use batch size 1 and step 1.
 BATCH_SIZE = 1
@@ -114,11 +116,41 @@ class GoogleLanguageModel(object):
         natural_log = logprobs[id]
         return natural_log/2.303
 
-    # get entire vector from context
-    def get_logprob_vector(self, lstm_state):
+    # this is part of a loop over every word in the testing corpus
+    # for each individual word, separate vectors are returned, where
+    # the vector's length is the vocabulary size, and each element is the logprob
+    # of one of the words in the vocabulary.
+    # The separate vectors returned are the logprobs for
+    # 1) The LSTM model
+    # 2) The kenlm 4-gram model ## <- change to 5-gram
+    # 3) The kenlm 2-gram model
+    def get_logprob_vectors_for_word(self, lstm_state, klm_4gram_state, klm_4gram_model,
+                                     klm_2gram_state, klm_2gram_model):
+        # get next word logprobs for lstm
         w = self.w
         bias = self.bias
         unnorm_logprobs = np.squeeze(np.dot(self.w, lstm_state.T)) + bias
-        logsumexp_logprobs = logsumexp(unnorm_logprobs)
-        logprobs = unnorm_logprobs - logsumexp_logprobs
-        return logprobs
+        lstm_logprobs = unnorm_logprobs - logsumexp(unnorm_logprobs)
+        
+        klm_4gram_out_state = kenlm.State()
+        klm_2gram_out_state = kenlm.State()
+        
+        lstm_vector = []
+        klm_4gram_vector = []
+        klm_2gram_vector = []
+        
+        # get score for each word, but keep using initial state. Do not update it
+        with open(self.vocab_file, 'r') as vocab_file:
+            for word in vocab_file:
+                word = word.strip()
+                tf_id = self.vocab.word_to_id(word)
+                lstm_score = lstm_logprobs[tf_id]/2.303 #convert from log_e to log_10
+                lstm_vector.append(lstm_score)
+                
+                klm_4gram_score = klm_4gram_model.BaseScore(klm_4gram_state, word, klm_4gram_out_state)
+                klm_4gram_vector.append(klm_4gram_score)
+    
+                klm_2gram_score = klm_2gram_model.BaseScore(klm_2gram_state, word, klm_2gram_out_state)
+                klm_2gram_vector.append(klm_2gram_score)
+            
+        return lstm_vector, klm_4gram_vector, klm_2gram_vector
