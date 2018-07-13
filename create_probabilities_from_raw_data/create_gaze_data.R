@@ -35,9 +35,9 @@ create_dat.no.punct <- function() {
   
   # alignment
   
-  token.surprisal.all <- read_csv('token_surprisalv2.csv') # created in preprocessing
-  lm_1b.tokens <- read.csv('lm1b-1gram.tsv', sep='\t', quote="")
-  token.line <- read_csv('token_line_num.csv')
+  token.surprisal.all <- read_csv('proprietary_processed_files/all_lm_token_probs.csv') # created in preprocessing
+  lm_1b.tokens <- read.csv('proprietary_processed_files/lm1b-1gram.tsv', sep='\t', quote="")
+  token.line <- read_csv('proprietary_processed_files/token_line_num.csv')
   
   ### insert interpolated token surprisal, using best fit and balanced
   token.surprisal.all <- token.surprisal.all %>%
@@ -126,7 +126,7 @@ create_dat.no.punct <- function() {
   word.surprisal <- word.surprisal %>% filter(is.letters(WORD))
   
   ## incorporate into raw data for all subjects
-  gaze.times <- read_csv('masterTX.csv')
+  gaze.times <- read_csv('proprietary_processed_files/masterTX.csv')
   dat <- left_join(gaze.times, word.surprisal, by=c('FILE', 'WNUM', 'WORD'))
   dat$word_id <- as.factor(paste(dat$FILE, dat$WNUM, sep='_'))
   dat$SUBJ <- factor(dat$SUBJ)

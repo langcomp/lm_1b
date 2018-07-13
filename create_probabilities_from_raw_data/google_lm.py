@@ -9,6 +9,7 @@ import data_utils as data_utils
 import filenames
 
 from scipy.special import logsumexp
+from numpy import array
 
 import math
 
@@ -122,9 +123,9 @@ class GoogleLanguageModel(object):
     # of one of the words in the vocabulary.
     # The separate vectors returned are the logprobs for
     # 1) The LSTM model
-    # 2) The kenlm 4-gram model ## <- change to 5-gram
+    # 2) The kenlm 5-gram model
     # 3) The kenlm 2-gram model
-    def get_logprob_vectors_for_word(self, lstm_state, klm_4gram_state, klm_4gram_model,
+    def get_logprob_vectors_for_word(self, lstm_state, klm_5gram_state, klm_5gram_model,
                                      klm_2gram_state, klm_2gram_model):
         # get next word logprobs for lstm
         w = self.w
@@ -132,25 +133,25 @@ class GoogleLanguageModel(object):
         unnorm_logprobs = np.squeeze(np.dot(self.w, lstm_state.T)) + bias
         lstm_logprobs = unnorm_logprobs - logsumexp(unnorm_logprobs)
         
-        klm_4gram_out_state = kenlm.State()
+        klm_5gram_out_state = kenlm.State()
         klm_2gram_out_state = kenlm.State()
         
         lstm_vector = []
-        klm_4gram_vector = []
+        klm_5gram_vector = []
         klm_2gram_vector = []
         
         # get score for each word, but keep using initial state. Do not update it
-        with open(self.vocab_file, 'r') as vocab_file:
+        with open( op.join(filenames.google_lm_dir, self.vocab_file) , 'r') as vocab_file:
             for word in vocab_file:
                 word = word.strip()
                 tf_id = self.vocab.word_to_id(word)
-                lstm_score = lstm_logprobs[tf_id]/2.303 #convert from log_e to log_10
+                lstm_score = lstm_logprobs[tf_id]#/2.303 #convert from log_e to log_10
                 lstm_vector.append(lstm_score)
                 
-                klm_4gram_score = klm_4gram_model.BaseScore(klm_4gram_state, word, klm_4gram_out_state)
-                klm_4gram_vector.append(klm_4gram_score)
-    
-                klm_2gram_score = klm_2gram_model.BaseScore(klm_2gram_state, word, klm_2gram_out_state)
+                klm_5gram_score = klm_5gram_model.BaseScore(klm_5gram_state, word, klm_5gram_out_state) * 2.303
+                klm_5gram_vector.append(klm_5gram_score)
+                
+                klm_2gram_score = klm_2gram_model.BaseScore(klm_2gram_state, word, klm_2gram_out_state) * 2.303
                 klm_2gram_vector.append(klm_2gram_score)
             
-        return lstm_vector, klm_4gram_vector, klm_2gram_vector
+        return array(lstm_vector), array(klm_5gram_vector), array(klm_2gram_vector)

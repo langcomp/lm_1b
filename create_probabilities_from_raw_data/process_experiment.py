@@ -2,7 +2,7 @@ import filenames
 import os.path as op
 import create_text_tokens_file
 import rnn_corpus
-import logprob_corpus
+import create_logprob_corpus_vectors
 import perplexity
 
 
@@ -28,6 +28,7 @@ if __name__ == '__main__':
 
     # feed corpus_tokenized_file to kenlm, as is on CLI
     # output kenlm to R-appropriate format on CLI
+    ## ADD DETAILS!
 
     # feed to RNN
     ## output word number
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     # rnn_corpus.create(tokenized_line_file, rnn_file)
     
     # for calculating interpolated perplexity geometrically
-    logprob_corpus.create(tokenized_line_file, logprob_file)
+    create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
 
     # calculate perplexity
     # perplexity.calculate(rnn_file)

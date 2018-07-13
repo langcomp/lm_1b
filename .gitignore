@@ -7,3 +7,4 @@ proprietary_processed_files/
 create_probabilities_from_raw_data/__pycache__/
 # prprocessed data
 preprocessed_data/
+.Rproj.user
