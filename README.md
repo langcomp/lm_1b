@@ -9,7 +9,7 @@
 
 0) You should create a `/raw_data` directory to store the raw Dundee files (these must be acquired independently, as they are proprietary)
 
-0) You should also create a directory that will be pointed to in `filenames.py` as the `google_lm_dir`. The `.pbtxt` and `ckpt` files from [tensorflow/models](https://github.com/tensorflow/models/tree/master/research/lm_1b).
+0) You should also create a directory that will be pointed to in `filenames.py` as the `google_lm_dir`. The `.pbtxt` and `ckpt` files from [tensorflow/models](https://github.com/tensorflow/models/tree/master/research/lm_1b) should be placed here.
 
 1) `process_experiment.py` is the central file for processing. The file requires a (directory of) file(s) with raw corpus data. In the case of the Dundee corpus, these files are formatted as:
 ```
