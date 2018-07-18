@@ -66,6 +66,9 @@ The important element is that each line contains one token per line. Tokens shou
     - `dundee_corpus.tkn` is the file output from the model generation above, with one token per line, including punctuation as a separate token.
     - The processing file `process_kenlm.py` is adapted from [modelblocks](https://github.com/modelblocks/modelblocks-release). It takes the regular output of `kenlm` and puts it into a format appropriate for an R dataframe or similar format.
 
+##### Optional geometric interpolation
+The use of `create_logprob_corpus_vectors` is optional and is not related to this project. 
+
 #### Align to Dundee corpus (`create_gaze_data.R`):
 
 ##### Align to token *types* in Dundee (~60,000)
