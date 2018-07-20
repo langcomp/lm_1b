@@ -8,3 +8,8 @@ create_probabilities_from_raw_data/__pycache__/
 # prprocessed data
 preprocessed_data/
 .Rproj.user
+.RData
+.Rhistory
+adam-key.pem
+vocab-2016-09-10.txt
+lm_1b.Rproj
