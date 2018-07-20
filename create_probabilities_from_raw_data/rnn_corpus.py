@@ -29,7 +29,7 @@ def create(token_corpus_line_file, rnn_probability_file):
                     current_file_id = file_id
                 token_index = token_line[1]
                 token = token_line[2]
-                # print(token_index)
+                print(token_index)
 
                 # calculate probability of each token and sum
                 # update model with each token

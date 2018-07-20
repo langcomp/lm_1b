@@ -34,10 +34,10 @@ if __name__ == '__main__':
     ## output word number
     ### word # of punctuation goes with word, including sentence-ending period
     ### </s> has NA for word number
-    # rnn_corpus.create(tokenized_line_file, rnn_file)
+    rnn_corpus.create(tokenized_line_file, rnn_file)
     
     # for calculating interpolated perplexity geometrically
-    create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
+    # create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
 
     # calculate perplexity
     # perplexity.calculate(rnn_file)
