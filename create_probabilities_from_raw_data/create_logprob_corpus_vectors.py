@@ -41,74 +41,77 @@ def create(token_corpus_line_file, logprob_probability_file):
 	# loop through corpus
 	current_file_id = ''
 	with open(token_corpus_line_file, 'r') as token_file:
-		with open(logprob_probability_file, 'w') as logprob_out_file:
-			csv_reader = reader(token_file)
-			for token_line in csv_reader:
-				file_id = token_line[0]
-				if current_file_id != file_id:
-					print("Calculating probabilities for file {}...".format(file_id))
-					current_file_id = file_id
-				
-				token_index = token_line[1]
-				token = token_line[2]
-				print(token, token_index)
-				
-				# get full vocab vectors for this token, from different models
-				token_lstm_vector, token_5gram_vector, token_2gram_vector = \
-					glm.get_logprob_vectors_for_word(lstm_state,
-													 klm_5gram_state, klm_5gram_model,
-													 klm_2gram_state, klm_2gram_model)
+		# with open(logprob_probability_file, 'w') as logprob_out_file:
+		csv_reader = reader(token_file)
+		for token_line in csv_reader:
+			file_id = token_line[0]
+			if current_file_id != file_id:
+				print("Calculating probabilities for file {}...".format(file_id))
+				current_file_id = file_id
+			
+			token_index = token_line[1]
+			token = token_line[2]
+			vocab_vec_idx = glm.vocab.word_to_id(token)
+			print(token, token_index, vocab_vec_idx)
+			
+			# get full vocab vectors for this token, from different models
+			token_lstm_vector, token_5gram_vector, token_2gram_vector = \
+				glm.get_logprob_vectors_for_word(lstm_state,
+												 klm_5gram_state, klm_5gram_model,
+												 klm_2gram_state, klm_2gram_model)
+			
 
-				# print(token_2gram_vector.shape, token_5gram_vector.shape, token_lstm_vector.shape)
+			# print(token_2gram_vector.shape, token_5gram_vector.shape, token_lstm_vector.shape)
 
-				# print( logsumexp(token_lstm_vector), logsumexp(token_5gram_vector), logsumexp(token_2gram_vector) )
+			# print( logsumexp(token_lstm_vector), logsumexp(token_5gram_vector), logsumexp(token_2gram_vector) )
 
-				# perform interpolation
-				## first, create an interpolated vector of lstm and 5gram vectors
-				### this will give us our surprisal model's log probability for each word
-				## then, perform multiplicative interpolation of the optimal vector and the
-				## 2gram vector
-				optimal_interpolated_vec = interpolate.interpolate_vectors(token_lstm_vector, token_5gram_vector)
-				# sanity check using regular interpolation where logsumexp should equal 1.0
-				# sanity_logprob_vec = interpolate.interpolate_vectors(optimal_interpolated_vec, token_2gram_vector)
-				# print( logsumexp(sanity_logprob_vec) )
-				# # perform multiplicative interpolation
+			# perform interpolation
+			## first, create an interpolated vector of lstm and 5gram vectors
+			### this will give us our surprisal model's log probability for each word
+			## then, perform multiplicative interpolation of the optimal vector and the
+			## 2gram vector
+			optimal_interpolated_vec = interpolate.interpolate_vectors(token_lstm_vector, token_5gram_vector)
+			# sanity check using regular interpolation where logsumexp should equal 1.0
+			# sanity_logprob_vec = interpolate.interpolate_vectors(optimal_interpolated_vec, token_2gram_vector)
+			# print( logsumexp(sanity_logprob_vec) )
+			# # perform multiplicative interpolation
 
-				# loop through different weights for token, and *then* update the models
-				interp_weights = np.arange(0.0, 1.01, 0.05)
-				for i_weight in interp_weights:
+			# loop through different weights for token, and *then* update the models
+			interp_weights = np.arange(0.0, 1.01, 0.01)
+			for i_weight in interp_weights:
 
-					multiplicative_interp_vec = interpolate.multiplicative_interpolate_vectors(optimal_interpolated_vec,
-																							   token_2gram_vector,
-																							   i_weight)
-					mult_logprob = logsumexp(multiplicative_interp_vec)
-					print(token_index, '{0:.2f}'.format(i_weight), mult_logprob)
+				multiplicative_interp_vec = interpolate.multiplicative_interpolate_vectors(optimal_interpolated_vec,
+																						   token_2gram_vector,
+																						   i_weight)
+				mult_logprob = logsumexp(multiplicative_interp_vec)
+				print(token_index, '{0:.2f}'.format(i_weight), mult_logprob, optimal_interpolated_vec[vocab_vec_idx])
+				with open("{}_{}.data".format(logprob_probability_file, current_file_id), 'a') as logprob_out_file:
 					logprob_out_file.write('{0:.2f}, {1}, {2}\n'.format(i_weight, token_index, mult_logprob))
 
 
-				# update lstm states by feeding in next word
-				inputs, char_ids_inputs, feed_dict, lstm, lstm_state = \
-					glm.process_word(token, inputs, char_ids_inputs, feed_dict, lstm)
+			# update lstm states by feeding in next word
+			inputs, char_ids_inputs, feed_dict, lstm, lstm_state = \
+				glm.process_word(token, inputs, char_ids_inputs, feed_dict, lstm)
 
-				# update kenlm 5gram state
-				klm_5gram_out_state = kenlm.State()
-				klm_5gram_model.BaseScore(klm_5gram_state, token, klm_5gram_out_state)
-				klm_5gram_state = klm_5gram_out_state
+			# update kenlm 5gram state
+			klm_5gram_out_state = kenlm.State()
+			klm_5gram_model.BaseScore(klm_5gram_state, token, klm_5gram_out_state)
+			klm_5gram_state = klm_5gram_out_state
 
-				# update kenlm 2gram state
-				klm_2gram_out_state = kenlm.State()
-				klm_2gram_model.BaseScore(klm_2gram_state, token, klm_2gram_out_state)
-				klm_2gram_state = klm_2gram_out_state
+			# update kenlm 2gram state
+			klm_2gram_out_state = kenlm.State()
+			klm_2gram_model.BaseScore(klm_2gram_state, token, klm_2gram_out_state)
+			klm_2gram_state = klm_2gram_out_state
 
-				# when the sentence changes (sentence-ending punctuation is detected), reinitialize the model
-				if token == "</s>":
-					# reinitialize lstm
-					inputs, char_ids_inputs, feed_dict, lstm, lstm_state = glm.process_init()
-					# reinitialize 5gram
-					klm_5gram_model.BeginSentenceWrite(klm_5gram_state)
-					# reinitialize 2gram
-					klm_2gram_model.BeginSentenceWrite(klm_2gram_state)
-					print('Reinitializing')
+			# when the sentence changes (sentence-ending punctuation is detected), reinitialize the model
+			if token == "</s>":
+				# reinitialize lstm
+				inputs, char_ids_inputs, feed_dict, lstm, lstm_state = glm.process_init()
+				# reinitialize 5gram
+				klm_5gram_model.BeginSentenceWrite(klm_5gram_state)
+				# reinitialize 2gram
+				klm_2gram_model.BeginSentenceWrite(klm_2gram_state)
+				print('Reinitializing')
 
 	toc = timeit.default_timer()
 	print("Elapsed time: {} seconds".format(toc - tic))

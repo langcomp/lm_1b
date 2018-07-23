@@ -20,7 +20,7 @@ if __name__ == '__main__':
     tokenized_line_file = op.join(filenames.preproc_dir, 'test_token_line.tkn')
     # where to output results of RNN
     rnn_file = op.join(filenames.preproc_dir, 'output.csv')
-    logprob_file = op.join(filenames.preproc_dir, 'logprob.dat')
+    logprob_file = op.join(filenames.preproc_dir, 'logprob')
 
     # create files named above
     # return the tokenized corpus string, one sentence per line
@@ -36,8 +36,10 @@ if __name__ == '__main__':
     ### </s> has NA for word number
     rnn_corpus.create(tokenized_line_file, rnn_file)
     
-    # for calculating interpolated perplexity geometrically
-    # create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
+    # for calculating interpolated perplexity multiplicatively
+    # this is for purely research purposes, and it is unlikely you
+    # will need to interpolate in a non-geometrical fashion
+    create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
 
     # calculate perplexity
     # perplexity.calculate(rnn_file)
