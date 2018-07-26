@@ -142,9 +142,13 @@ class GoogleLanguageModel(object):
         
         # get score for each word, but keep using initial state. Do not update it
         with open( op.join(filenames.google_lm_dir, self.vocab_file) , 'r') as vocab_file:
+         
             for word in vocab_file:
                 word = word.strip()
                 tf_id = self.vocab.word_to_id(word)
+                
+     
+                
                 lstm_score = lstm_logprobs[tf_id]#/2.303 #convert from log_e to log_10
                 lstm_vector.append(lstm_score)
                 
@@ -153,5 +157,11 @@ class GoogleLanguageModel(object):
                 
                 klm_2gram_score = klm_2gram_model.BaseScore(klm_2gram_state, word, klm_2gram_out_state) * 2.303
                 klm_2gram_vector.append(klm_2gram_score)
+
+        # compare dimensionality and logsumexp of lstm_logprobs and lstm_vector
+        # print("lstm_logprobs.size: {}, lstm_vector.size: {}".format(lstm_logprobs.size, len(lstm_vector)))
+        # print("logsumexp(lstm_logprobs): {}, logsumexp(lstm_vector): {}".format(logsumexp(lstm_logprobs),
+        #                                                                         logsumexp(lstm_vector[:-1])))
             
-        return array(lstm_vector), array(klm_5gram_vector), array(klm_2gram_vector)
+        return array(lstm_vector[:-1]), array(klm_5gram_vector[:-1]), array(klm_2gram_vector[:-1])
+

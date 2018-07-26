@@ -78,15 +78,17 @@ def create(token_corpus_line_file, logprob_probability_file):
 
 			# loop through different weights for token, and *then* update the models
 			interp_weights = np.arange(0.0, 1.01, 0.01)
-			for i_weight in interp_weights:
-
-				multiplicative_interp_vec = interpolate.multiplicative_interpolate_vectors(optimal_interpolated_vec,
-																						   token_2gram_vector,
-																						   i_weight)
-				mult_logprob = logsumexp(multiplicative_interp_vec)
-				print(token_index, '{0:.2f}'.format(i_weight), mult_logprob, optimal_interpolated_vec[vocab_vec_idx])
-				with open("{}_{}.data".format(logprob_probability_file, current_file_id), 'a') as logprob_out_file:
-					logprob_out_file.write('{0:.2f}, {1}, {2}\n'.format(i_weight, token_index, mult_logprob))
+			with open("{}_{}.data".format(logprob_probability_file, current_file_id), 'a') as logprob_out_file:
+				for i_weight in interp_weights:
+	
+					multiplicative_interp_vec = interpolate.multiplicative_interpolate_vectors(optimal_interpolated_vec,
+																							   token_2gram_vector,
+																							   i_weight)
+					mult_logprob = logsumexp(multiplicative_interp_vec)
+					print(token_index, '{0:.2f}'.format(i_weight), mult_logprob, multiplicative_interp_vec[vocab_vec_idx])
+					
+					logprob_out_file.write('{0:.2f}, {1}, {2}, {3}\n'.format(i_weight, token_index, mult_logprob,
+																			multiplicative_interp_vec[vocab_vec_idx]))
 
 
 			# update lstm states by feeding in next word
