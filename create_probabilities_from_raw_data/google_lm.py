@@ -165,3 +165,56 @@ class GoogleLanguageModel(object):
             
         return array(lstm_vector[:-1]), array(klm_5gram_vector[:-1]), array(klm_2gram_vector[:-1])
 
+    def get_logprob_vectors_for_word_unigram(self, lstm_state, klm_5gram_state, klm_5gram_model):
+        # get next word logprobs for lstm
+        w = self.w
+        bias = self.bias
+        unnorm_logprobs = np.squeeze(np.dot(self.w, lstm_state.T)) + bias
+        lstm_logprobs = unnorm_logprobs - logsumexp(unnorm_logprobs)
+    
+        klm_5gram_out_state = kenlm.State()
+        klm_1gram_model = get_klm_arpa_all_scores(op.join(filenames.lm_dir, 'lm1b-1gram_mod.csv'))
+    
+        lstm_vector = []
+        klm_5gram_vector = []
+        klm_ngram_vector = []
+    
+        # get score for each word, but keep using initial state. Do not update it
+        with open(op.join(filenames.google_lm_dir, self.vocab_file), 'r') as vocab_file:
+            for word in vocab_file:
+                word = word.strip()
+                tf_id = self.vocab.word_to_id(word)
+            
+                lstm_score = lstm_logprobs[tf_id]  # /2.303 #convert from log_e to log_10
+                lstm_vector.append(lstm_score)
+            
+                klm_5gram_score = klm_5gram_model.BaseScore(klm_5gram_state, word, klm_5gram_out_state) * 2.303
+                klm_5gram_vector.append(klm_5gram_score)
+            
+                klm_ngram_score = klm_1gram_model[word]
+                klm_ngram_vector.append(klm_ngram_score)
+    
+        # compare dimensionality and logsumexp of lstm_logprobs and lstm_vector
+        # print("lstm_logprobs.size: {}, lstm_vector.size: {}".format(lstm_logprobs.size, len(lstm_vector)))
+        # print("logsumexp(lstm_logprobs): {}, logsumexp(lstm_vector): {}".format(logsumexp(lstm_logprobs),
+        #                                                                         logsumexp(lstm_vector[:-1])))
+    
+        return array(lstm_vector[:-1]), array(klm_5gram_vector[:-1]), array(klm_ngram_vector[:-1])
+
+
+def get_klm_arpa_all_scores(arpa_filename):
+    '''
+    Read in a modified arpa file without /data/ and /n-gram/ headers or /end/ footer.
+    Then create a dictionary of {word: score}
+    :param arpa_filename: a modified arpa file
+    :return: A dictionary of word:score
+    '''
+    ngram_scores = {}
+    with open(arpa_filename, 'r') as arpa_file:
+        for line in arpa_file:
+            score_token = line.strip().split('\t')
+            ngram_scores[score_token[1]] = score_token[0]
+            
+    return ngram_scores
+    
+

@@ -3,6 +3,7 @@ import os.path as op
 import create_text_tokens_file
 import rnn_corpus
 import create_logprob_corpus_vectors
+import create_logprob_corpus_vectors_unigram
 import perplexity
 import re
 import sys
@@ -42,7 +43,8 @@ if __name__ == '__main__':
     # for calculating interpolated perplexity multiplicatively
     # this is for purely research purposes, and it is unlikely you
     # will need to interpolate in a non-geometrical fashion
-    create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
+    # create_logprob_corpus_vectors.create(tokenized_line_file, logprob_file)
+    create_logprob_corpus_vectors_unigram.create(tokenized_line_file, logprob_file)
 
     # calculate perplexity
     # perplexity.calculate(rnn_file)
