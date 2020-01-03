@@ -14,7 +14,7 @@ mult_interpolate <- function(lp1, lp2, b) {
 ## get 'improper' perplexity
 
 perplexity_val = c()
-interp.seq <- seq(from=0.0, to=1.0, by=0.05) # by 0.05 only to 0.95
+interp.seq <- seq(from=0.92, to=0.939, by=0.001)
 
 for (i in seq_along(interp.seq)) {
   word.surprisal <- word.surprisal %>%
@@ -24,15 +24,19 @@ for (i in seq_along(interp.seq)) {
     ungroup()
   perplexity_val[i] <- perplexity(word.surprisal$newlogprob)  
 }
-perplexity_val
+(pplx.df <- data.frame(interp.seq, perplexity_val))
 
 # load mean logsumexp from tokens for dundee corpus
-logprobs_Z <- read_csv('proprietary_processed_files/logsumexp_mean_by_surprisal_weight.csv')
+# logprobs_Z <- read_csv('proprietary_processed_files/logsumexp_mean_by_surprisal_weight.csv')
 
-# multiply 'improper' perplexities x exp(logprob_Z)
-mult_perplexity <- perplexity_val * exp(logprobs_Z$logsumexp_mean)
+# multiply 'improper' perplexities x exp(logprob)
+mult_perplexity <- logprob_weight_means %>%
+  mutate(pplx = perplexity_val * exp(logprob_weight_means$mean_sum))
+
 mult_perplexity
 
+ggplot(mult_perplexity, aes(x=weight, y=pplx)) +
+  geom_point()
 
 # add new data to logprob_Z
 logprob_base <- read_csv('proprietary_processed_files/logprob-700tokens-20weights.csv')

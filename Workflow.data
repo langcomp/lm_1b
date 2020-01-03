@@ -1,0 +1,26 @@
+Workflow:
+process_experiment.py
+    token_corpus_string = create_text_tokens_file.create()
+    rnn_corpus.create()
+    create_logprob_corpus_vectors.create()
+        glm()
+        build klm_5
+        build klm_2
+        for token in token_line:
+            vectors = glm.get_logprob_vectors_for_word()
+                unnorm_logprobs = np.squeeze(np.dot(self.w, lstm_state.T)) + bias
+                lstm_logprobs = unnorm_logprobs - logsumexp(unnorm_logprobs)
+                for word in vocab_file:
+                    lstm_score = lstm_logprobs[tf_id]
+                    klm_5gram_score = klm_5gram_model.BaseScore(klm_5gram_state, word, klm_5gram_out_state) * 2.303
+                    klm_2gram_score = klm_2gram_model.BaseScore(klm_2gram_state, word, klm_2gram_out_state) * 2.303
+                return vectors
+
+            optimal_interpolated_vec = interpolate.interpolate_vectors()
+
+            for weight in 0.0-1.0:
+                multiplicative_interp_vec = interpolate.multiplicative_interpolate_vectors()
+                mult_logprob = logsumexp(multiplicative_interp_vec)
+
+            update models
+            if token == </s>: reinitialize models

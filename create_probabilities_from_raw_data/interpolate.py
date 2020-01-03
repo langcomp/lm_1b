@@ -21,8 +21,6 @@ def interpolate_vectors(lstm_vec, ngram_vec, vec_w=0.71):
 def multiplicative_interpolate(lp1, lp2, b):
 	return lp1*b + lp2*(1-b)
 	
-def multiplicative_interpolate_vectors(lstm_vec, ngram_vec, vec_w=0.71):
-	# mult_interp_vec = [multiplicative_interpolate(a, b, vec_w) for a,b in zip(lstm_vec, ngram_vec)]
-	# return mult_interp_vec
+def multiplicative_interpolate_vectors(optimal_vec, ngram_vec, vec_w=0.71):
 	# print(lstm_vec.shape, np.array([vec_w]).shape, ngram_vec.shape, np.array([(1 - vec_w)]).shape)
-	return ( np.multiply(lstm_vec,np.array([vec_w])) + np.multiply(ngram_vec,np.array([(1 - vec_w)])))
+	return (np.multiply(optimal_vec, np.array([vec_w])) + np.multiply(ngram_vec, np.array([(1 - vec_w)])))

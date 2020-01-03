@@ -26,7 +26,7 @@ interpolate <- function(lp1, lp2, b) {
 
 interpolate.blend.pplx <- function(all.models, model1, model2) {
   perplexity_val = c()
-  interp.seq <- seq(from=0.0, to=1.0, by=0.01)
+  interp.seq <- seq(from=0.91, to=0.93, by=0.001)
 
   for (i in seq_along(interp.seq)) {
     word.surprisal <- all.models %>%
@@ -39,17 +39,19 @@ interpolate.blend.pplx <- function(all.models, model1, model2) {
 }
 
 perplexity_val = c()
-interp.seq <- seq(from=0.0, to=1.0, by=0.01)
+interp.seq <- seq(from=0.91, to=0.93, by=0.001)
 
 for (i in seq_along(interp.seq)) {
   word.surprisal <- word.surprisal %>%
     rowwise() %>%
-    mutate(newlogprob = interpolate(interp.balanced.curr, k3gram.curr, interp.seq[[i]])) %>%
+    mutate(newlogprob = interpolate(interp.curr, k3gram.curr, interp.seq[[i]])) %>%
     ungroup()
   perplexity_val[i] <- perplexity(word.surprisal$newlogprob)  
 }
 
-test <- interpolate.blend.pplx(word.surprisal, "interp.curr", "k1gram.curr")
+(pplx.df <- data.frame(interp.seq, perplexity_val))
+
+test <- interpolate.blend.pplx(word.surprisal, "interp.curr", "k3gram.curr")
 
 fitted.curr.unigram.pplx.values <- data.frame(interp.seq, perplexity_val)
 fitted.curr.pplx <- plot(fitted.curr.unigram.pplx.values, main="",

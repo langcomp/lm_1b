@@ -66,9 +66,6 @@ The important element is that each line contains one token per line. Tokens shou
     - `dundee_corpus.tkn` is the file output from the model generation above, with one token per line, including punctuation as a separate token.
     - The processing file `process_kenlm.py` is adapted from [modelblocks](https://github.com/modelblocks/modelblocks-release). It takes the regular output of `kenlm` and puts it into a format appropriate for an R dataframe or similar format.
 
-##### Optional geometric interpolation
-The use of `create_logprob_corpus_vectors` is optional and is not related to this project. 
-
 #### Align to Dundee corpus (`create_gaze_data.R`):
 
 ##### Align to token *types* in Dundee (~60,000)
@@ -143,7 +140,7 @@ The align function above will create two data structures:
 
 Uless otherwise noted, the modeling files can all be run independently. There is not necessarily any order to run them in. The files are split up by what type of model they use, either GAMs or linear models.
 
-#### GAMS
+#### GAMs
 * `gams.R` - a large file that creates many different types of GAMs that are used below
 * `ACL_GAMS.R` - unpublished GAM codes for uni-, bi-, trigrams both fitted and balanced
 * `fitted_df_gams.R` - fitted df nonlinear GAMs and log likelihood tests
@@ -172,9 +169,57 @@ Uless otherwise noted, the modeling files can all be run independently. There is
 * `perplexity-plot.R` - unused perplexity plot
 * `probability-densities.R` - unused file playing around with `dplyr` and `'melt`
 
+## (Optional) Interpolation experiments
+
+The use of `create_logprob_corpus_vectors` is optional and is not necessary for this project. 
+
+* Interpolation experiments can be run in parallel. Since they require a lot of processing power, it is recommended to run it remotely on something like AWS.
+  * NB: For Northwestern users, you must be logged into the Northwestern VPN to access the lab's AMIs.
+* The interpolation experiments require the use of the large binary language model files created above.
+  * For NU, these are stored on an AWS instance in the `kenlm/` directory
+* Experiments are run from the shell scripts located in `create_probabilities_from_raw_data/`.
+  * The script `run-all-experiments.sh` will launch a `screen` instance for each of the 20 dundee files
+  * Each instance then calls `run-experiment.sh`, which loads the anaconda interpreter, and then runs `process_experiment.py`
+  * `process_experiment.py` is the same files used above, also the corpora have already been created, so those lines should be commented out
+  * The important line is `create_logprob_corpus_vectors. create (tokenized_line_file, logprob_file)`
+### Creating vectors for interpolation calculations
+* As mentioned above, these are created in the `create()` method of `create_logprob_corpus_vectors.py`.
+* **Input**
+  * `tokenized_line_file` is a comma-delimited file with the following features
+    * [0] - file_id
+    * [1] - token_index
+    * [2] - token
+  * `logprob_file` is a file where the output will be stored
+* **Output** - a csv file
+  * [0] - interpolation weight, e.g. [0.00 - 1.00]
+  * [1] - from input
+  * [2] - the logsumexp of the multiplicatively interpolated probability vector (see below)
+  * [3] - the token probability from the multiplicatively interpolated vector
+* **Processing**
+  * **multiplicative interpolation vector**
+    * calculated from interpolating the optimal vector (sometimes called "lstm vector") and the ngram vector, at the interpolation weight, as:
+`np.multiply(optimal_vec, np.array([vec_w])) + np.multiply(ngram_vec, np.array([(1 - vec_w)]))`
+
+## **TODO**
+### Calculating interpolated perplexity
+* `multi_interpolate.R`
+  * What kind of input
+  * What it does
+  * What it outputs
+* `evaluation_code/CIs-effective-interp.R`
+* `evaluation_code/interpolate.R`
 
 
 
 ## Miscellaneous files
  * `evaluation_code/bnc.R` - attempting the same filtering as Smith & Levy (2013) for British versus American spelling
  * `evaluation_code/perplexity.R` - for calculating perplexity of various LMs. This is referenced in `process_experiments.py`.
+   * Within the `create()` function, the language models must be set to the ones you would like for interpolation
+     * For the published papers, we use the optimal LSTM, 5-gram, and 2-gram models
+   * The following should all be set for the experiment
+        ```
+        begin_weight = 0.01
+        end_weight = 1.00
+        increment_weight = 0.01
+        ```
+    *
